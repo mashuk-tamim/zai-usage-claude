@@ -11,12 +11,10 @@ Weekly     15%  ███░░░░░░░░░░░░░░░░░  34
            Resets Monday, September 8, 2026 at 6:00 PM
 MCP         4%  █░░░░░░░░░░░░░░░░░░░  3 / 100 calls
 
-Configuration Guidelines & Flags:
-  /zai-usage --24h           Display reset times in 24-hour clock
-  /zai-usage --tz <zone>     Override timezone (e.g. --tz Asia/Dhaka, --tz UTC)
-  /zai-usage --config        View recommended ~/.claude/settings.json template
-  /zai-usage --json          Output raw parsed JSON data
-  Settings File              code ~/.claude/settings.json [active: env.ANTHROPIC_AUTH_TOKEN]
+Options:
+  /zai-usage --tz <zone>   Set timezone (e.g. /zai-usage --tz Asia/Dhaka)
+  /zai-usage --24h         24-hour time format
+  /zai-usage --json        Output raw parsed JSON
 ```
 
 ## Setup
@@ -74,9 +72,8 @@ Then run `/zai-usage-tracker:zai-usage`. (Plugin commands are always namespaced 
 
 ```
 /zai-usage                 # system-local timezone, 12h clock
-/zai-usage --24h           # 24-hour clock
 /zai-usage --tz Asia/Dhaka # override timezone
-/zai-usage --config        # show settings.json configuration template
+/zai-usage --24h           # 24-hour clock
 /zai-usage --json          # raw parsed JSON
 ```
 
