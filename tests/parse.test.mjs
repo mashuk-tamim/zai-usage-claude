@@ -52,6 +52,73 @@ test('throws on invalid structure', () => {
   assert.throws(() => parseQuota(null));
 });
 
+test('planName control/escape characters are stripped', () => {
+  const p = parseQuota(resp([], { planName: 'GLM\x1b[31m Plan' }));
+  assert.equal(p.plan, 'GLM[31m Plan');
+});
+
+test('resolveApiKey skips ANTHROPIC_AUTH_TOKEN pointed at non-Z.ai base URL', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: (p) => {
+      if (p === '/mock/home/.claude/settings.json') {
+        return JSON.stringify({
+          env: { ANTHROPIC_AUTH_TOKEN: 'real-anthropic-key', ANTHROPIC_BASE_URL: 'https://api.anthropic.com' }
+        });
+      }
+      return null;
+    }
+  });
+  assert.equal(auth, null);
+});
+
+test('resolveApiKey skips ANTHROPIC_AUTH_TOKEN with no base URL', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: (p) => {
+      if (p === '/mock/home/.claude/settings.json') {
+        return JSON.stringify({ env: { ANTHROPIC_AUTH_TOKEN: 'ambiguous-token' } });
+      }
+      return null;
+    }
+  });
+  assert.equal(auth, null);
+});
+
+test('resolveApiKey accepts ANTHROPIC_AUTH_TOKEN with z.ai base URL', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: (p) => {
+      if (p === '/mock/home/.claude/settings.json') {
+        return JSON.stringify({
+          env: { ANTHROPIC_AUTH_TOKEN: 'zai-token', ANTHROPIC_BASE_URL: 'https://api.z.ai/api/anthropic' }
+        });
+      }
+      return null;
+    }
+  });
+  assert.equal(auth.key, 'zai-token');
+});
+
+test('isZaiBaseUrl rejects spoofed URLs containing z.ai outside the hostname', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: (p) => {
+      if (p === '/mock/home/.claude/settings.json') {
+        return JSON.stringify({
+          env: { ANTHROPIC_AUTH_TOKEN: 'spoofed', ANTHROPIC_BASE_URL: 'https://evil.com/?x=z.ai' }
+        });
+      }
+      return null;
+    }
+  });
+  assert.equal(auth, null);
+});
+
 test('resolveApiKey prioritizes explicit ZAI_API_KEY in env', () => {
   const auth = resolveApiKey({
     env: { ZAI_API_KEY: 'env-zai-key' },

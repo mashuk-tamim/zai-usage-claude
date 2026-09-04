@@ -34,7 +34,7 @@ export function parseQuota(response) {
 
     if (raw.type === 'TIME_LIMIT') {
       mcp = item;
-    } else if (minutes === 300 || (raw.unit === 3 && raw.number === 5)) {
+    } else if (minutes === 300) {
       session = item;
     } else if (minutes === 10080 || raw.unit === 6) {
       weekly = item;
@@ -45,7 +45,10 @@ export function parseQuota(response) {
     }
   }
 
-  let plan = response.data.planName || response.data.plan;
+  // planName goes straight to the terminal — strip control/escape chars from
+  // the untrusted API response so it can't fake or hide output lines.
+  const clean = (s) => String(s).replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+  let plan = response.data.planName ? clean(response.data.planName) : (response.data.plan ? clean(response.data.plan) : null);
   if (!plan && response.data.level) {
     plan = `GLM ${response.data.level.charAt(0).toUpperCase()}${response.data.level.slice(1)} Plan`;
   }
@@ -93,10 +96,21 @@ async function fetchQuota(key) {
   return res.json();
 }
 
+// True only when the Anthropic base URL points at a z.ai host — guards
+// against reusing a non-Z.ai (or spoofed, e.g. "evil.com/?x=z.ai") token.
+function isZaiBaseUrl(url) {
+  try {
+    const h = new URL(url).hostname;
+    return h === 'z.ai' || h.endsWith('.z.ai');
+  } catch {
+    return false;
+  }
+}
+
 // Resolves Z.ai API key from multiple standard locations:
 // 1. process.env.ZAI_API_KEY
-// 2. ~/.claude/settings.json (env.ZAI_API_KEY or env.ANTHROPIC_AUTH_TOKEN)
-// 3. process.env.ANTHROPIC_AUTH_TOKEN (used by Claude Code when configured with Z.ai)
+// 2. ~/.claude/settings.json (env.ZAI_API_KEY, or env.ANTHROPIC_AUTH_TOKEN when base URL is z.ai)
+// 3. process.env.ANTHROPIC_AUTH_TOKEN (when ANTHROPIC_BASE_URL points at z.ai)
 export function resolveApiKey(options = {}) {
   const env = options.env || process.env;
   const readFile = options.readFile || ((p) => {
@@ -128,20 +142,16 @@ export function resolveApiKey(options = {}) {
       if (confEnv.ZAI_API_KEY) {
         return { key: confEnv.ZAI_API_KEY, source: `${p} (env.ZAI_API_KEY)` };
       }
-      if (confEnv.ANTHROPIC_AUTH_TOKEN && (!confEnv.ANTHROPIC_BASE_URL || confEnv.ANTHROPIC_BASE_URL.includes('z.ai'))) {
-        return { key: confEnv.ANTHROPIC_AUTH_TOKEN, source: `${p} (env.ANTHROPIC_AUTH_TOKEN)` };
-      }
-      if (confEnv.ANTHROPIC_AUTH_TOKEN) {
+      // Only reuse ANTHROPIC_AUTH_TOKEN when the base URL is a z.ai host —
+      // otherwise a real Anthropic key could be sent to api.z.ai.
+      if (confEnv.ANTHROPIC_AUTH_TOKEN && isZaiBaseUrl(confEnv.ANTHROPIC_BASE_URL)) {
         return { key: confEnv.ANTHROPIC_AUTH_TOKEN, source: `${p} (env.ANTHROPIC_AUTH_TOKEN)` };
       }
     } catch {}
   }
 
   // 3. ANTHROPIC_AUTH_TOKEN in environment (e.g. if set by Claude Code / shell)
-  if (env.ANTHROPIC_AUTH_TOKEN && (!env.ANTHROPIC_BASE_URL || env.ANTHROPIC_BASE_URL.includes('z.ai'))) {
-    return { key: env.ANTHROPIC_AUTH_TOKEN, source: 'process.env.ANTHROPIC_AUTH_TOKEN' };
-  }
-  if (env.ANTHROPIC_AUTH_TOKEN) {
+  if (env.ANTHROPIC_AUTH_TOKEN && isZaiBaseUrl(env.ANTHROPIC_BASE_URL)) {
     return { key: env.ANTHROPIC_AUTH_TOKEN, source: 'process.env.ANTHROPIC_AUTH_TOKEN' };
   }
 
@@ -222,6 +232,10 @@ async function main() {
     if (a === '--tz') {
       tz = process.argv[++i];
       if (!tz) { usage(); process.exit(1); }
+      if (!validateTimezone(tz)) {
+        console.error(`Invalid IANA timezone: "${tz}". Example valid timezones: Asia/Dhaka, America/New_York, Europe/London, UTC.`);
+        process.exit(1);
+      }
     } else if (a === '--24h') {
       h24 = true;
     } else if (a === '--12h') {
@@ -271,7 +285,9 @@ async function main() {
   if (!auth?.key) {
     console.error(
       'Z.ai API key is not set.\n' +
-      'Please ensure ANTHROPIC_AUTH_TOKEN or ZAI_API_KEY is in ~/.claude/settings.json or export ZAI_API_KEY=your-key.'
+      'Set ZAI_API_KEY in ~/.claude/settings.json or export ZAI_API_KEY=your-key.\n' +
+      '(ANTHROPIC_AUTH_TOKEN is only picked up when ANTHROPIC_BASE_URL points at z.ai;\n' +
+      ' if you use a custom gateway, export ZAI_API_KEY instead.)'
     );
     process.exit(1);
   }
@@ -326,8 +342,9 @@ async function main() {
   console.log('\nOptions:');
   console.log('  /zai-usage --tz <zone>           Set timezone for this run');
   console.log('  /zai-usage --24h                 24-hour time format');
+  console.log('  /zai-usage --12h                 12-hour time format');
   console.log('  /zai-usage --set-tz <zone>       Save default timezone (e.g. Asia/Dhaka)');
-  console.log('  /zai-usage --set-format <12|24>  Save default format (12h or 24h)');
+  console.log('  /zai-usage --set-format <12h|24h>  Save default format (12h or 24h)');
   console.log('  /zai-usage --json                Output raw parsed JSON');
 }
 

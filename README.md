@@ -24,6 +24,8 @@ Options:
 **Zero-config if you use Z.ai with Claude Code:**
 If your `~/.claude/settings.json` already configures Z.ai as your Anthropic provider (`ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_BASE_URL`), the command **automatically detects and reads your token** from `~/.claude/settings.json` or the environment. No extra setup is required!
 
+> `ANTHROPIC_AUTH_TOKEN` is only picked up when `ANTHROPIC_BASE_URL` points at a z.ai host — it's never sent anywhere else. If you use a custom gateway or proxy, set `ZAI_API_KEY` instead.
+
 ### Recommended `~/.claude/settings.json` for Z.ai
 
 Run `code ~/.claude/settings.json` in your terminal and add:
