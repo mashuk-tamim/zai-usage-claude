@@ -11,7 +11,12 @@ Weekly     15%  ███░░░░░░░░░░░░░░░░░  34
            Resets Monday, September 8, 2026 at 6:00 PM
 MCP         4%  █░░░░░░░░░░░░░░░░░░░  3 / 100 calls
 
-To configure settings: code ~/.claude/settings.json [active: env.ANTHROPIC_AUTH_TOKEN]
+Configuration Guidelines & Flags:
+  /zai-usage --24h           Display reset times in 24-hour clock
+  /zai-usage --tz <zone>     Override timezone (e.g. --tz Asia/Dhaka, --tz UTC)
+  /zai-usage --config        View recommended ~/.claude/settings.json template
+  /zai-usage --json          Output raw parsed JSON data
+  Settings File              code ~/.claude/settings.json [active: env.ANTHROPIC_AUTH_TOKEN]
 ```
 
 ## Setup

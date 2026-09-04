@@ -253,7 +253,13 @@ async function main() {
     ? 'env.ANTHROPIC_AUTH_TOKEN'
     : (auth.source?.includes('ZAI_API_KEY') ? 'env.ZAI_API_KEY' : '');
   const fieldHint = tokenField ? ` [active: ${tokenField}]` : '';
-  console.log(`\nTo configure settings: code ~/.claude/settings.json${fieldHint}`);
+
+  console.log('\nConfiguration Guidelines & Flags:');
+  console.log('  /zai-usage --24h           Display reset times in 24-hour clock');
+  console.log('  /zai-usage --tz <zone>     Override timezone (e.g. --tz Asia/Dhaka, --tz UTC)');
+  console.log('  /zai-usage --config        View recommended ~/.claude/settings.json template');
+  console.log('  /zai-usage --json          Output raw parsed JSON data');
+  console.log(`  Settings File              code ~/.claude/settings.json${fieldHint}`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
