@@ -11,7 +11,7 @@ Run the bundled reporter and show its output to the user as-is (it is already fo
 node ${CLAUDE_SKILL_DIR}/scripts/zai-usage.mjs $ARGUMENTS
 ```
 
-- Exit code 1 with "ZAI_API_KEY is not set" → tell the user to set the key (never repeat its value): `export ZAI_API_KEY=...` or in `~/.claude/settings.json` add `"env": { "ZAI_API_KEY": "..." }`, then re-run.
+- Exit code 1 with key not found → tell the user to configure the key (never repeat its value): ensure `ANTHROPIC_AUTH_TOKEN` (for Z.ai provider setup) or `ZAI_API_KEY` is in `~/.claude/settings.json`, or export `ZAI_API_KEY=...` in their shell, then re-run.
 - Exit code 2 → API/HTTP error: show the stderr message, suggest re-running later.
 - `--json` → output is raw parsed JSON; summarize it in a small table instead of dumping it.
 - If the user wants different formatting, offer `--tz <IANA-timezone>` (default: system local) and `--24h`.

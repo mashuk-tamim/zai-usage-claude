@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 // Z.ai (GLM) Coding Plan quota reporter — zero deps, Node 18+.
-// Used by the /zai-usage Claude Code skill. API key comes from ZAI_API_KEY.
+// Used by the /zai-usage Claude Code skill. API key comes from ~/.claude/settings.json or env.
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { pathToFileURL } from 'node:url';
+
 const ENDPOINT = 'https://api.z.ai/api/monitor/usage/quota/limit';
 
 // Mirrors parseQuotaResponse in the VS Code extension: opaque unit/number
@@ -84,8 +89,63 @@ async function fetchQuota(key) {
     // Same fallback as the extension: some keys need a Bearer prefix.
     res = await fetch(ENDPOINT, { headers: { ...headers, Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(10000) });
   }
-  if (!res.ok) throw new Error(`HTTP ${res.status} from ${ENDPOINT} — check your ZAI_API_KEY`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${ENDPOINT} — check your Z.ai API key / token`);
   return res.json();
+}
+
+// Resolves Z.ai API key from multiple standard locations:
+// 1. process.env.ZAI_API_KEY
+// 2. ~/.claude/settings.json (env.ZAI_API_KEY or env.ANTHROPIC_AUTH_TOKEN)
+// 3. process.env.ANTHROPIC_AUTH_TOKEN (used by Claude Code when configured with Z.ai)
+export function resolveApiKey(options = {}) {
+  const env = options.env || process.env;
+  const readFile = options.readFile || ((p) => {
+    try {
+      return fs.readFileSync(p, 'utf8');
+    } catch {
+      return null;
+    }
+  });
+  const homedir = options.homedir || os.homedir;
+
+  // 1. Explicit ZAI_API_KEY environment variable
+  if (env.ZAI_API_KEY) {
+    return { key: env.ZAI_API_KEY, source: 'process.env.ZAI_API_KEY' };
+  }
+
+  // 2. ~/.claude/settings.json
+  const settingsPaths = [
+    path.join(homedir(), '.claude', 'settings.json'),
+    path.join(process.cwd(), '.claude', 'settings.json')
+  ];
+
+  for (const p of settingsPaths) {
+    const raw = readFile(p);
+    if (!raw) continue;
+    try {
+      const config = JSON.parse(raw);
+      const confEnv = config.env || {};
+      if (confEnv.ZAI_API_KEY) {
+        return { key: confEnv.ZAI_API_KEY, source: `${p} (env.ZAI_API_KEY)` };
+      }
+      if (confEnv.ANTHROPIC_AUTH_TOKEN && (!confEnv.ANTHROPIC_BASE_URL || confEnv.ANTHROPIC_BASE_URL.includes('z.ai'))) {
+        return { key: confEnv.ANTHROPIC_AUTH_TOKEN, source: `${p} (env.ANTHROPIC_AUTH_TOKEN)` };
+      }
+      if (confEnv.ANTHROPIC_AUTH_TOKEN) {
+        return { key: confEnv.ANTHROPIC_AUTH_TOKEN, source: `${p} (env.ANTHROPIC_AUTH_TOKEN)` };
+      }
+    } catch {}
+  }
+
+  // 3. ANTHROPIC_AUTH_TOKEN in environment (e.g. if set by Claude Code / shell)
+  if (env.ANTHROPIC_AUTH_TOKEN && (!env.ANTHROPIC_BASE_URL || env.ANTHROPIC_BASE_URL.includes('z.ai'))) {
+    return { key: env.ANTHROPIC_AUTH_TOKEN, source: 'process.env.ANTHROPIC_AUTH_TOKEN' };
+  }
+  if (env.ANTHROPIC_AUTH_TOKEN) {
+    return { key: env.ANTHROPIC_AUTH_TOKEN, source: 'process.env.ANTHROPIC_AUTH_TOKEN' };
+  }
+
+  return null;
 }
 
 function usage() {
@@ -116,17 +176,20 @@ async function main() {
     }
   }
 
-  const key = process.env.ZAI_API_KEY;
-  if (!key) {
+  const auth = resolveApiKey();
+  if (!auth?.key) {
     console.error(
-      'ZAI_API_KEY is not set.\n' +
+      'Z.ai API key is not set.\n' +
+      'Could not find ZAI_API_KEY or ANTHROPIC_AUTH_TOKEN in environment or ~/.claude/settings.json.\n' +
       'Get a key: https://z.ai/manage-apikey/apikey-list\n' +
       'Set it either:\n' +
-      '  export ZAI_API_KEY=your-key\n' +
-      '  or in ~/.claude/settings.json:  { "env": { "ZAI_API_KEY": "your-key" } }'
+      '  in ~/.claude/settings.json: { "env": { "ANTHROPIC_AUTH_TOKEN": "..." } } (or "ZAI_API_KEY")\n' +
+      '  or in your shell profile: export ZAI_API_KEY=your-key'
     );
     process.exit(1);
   }
+
+  const key = auth.key;
 
   let parsed;
   try {
@@ -166,7 +229,6 @@ async function main() {
   }
 }
 
-import { pathToFileURL } from 'node:url';
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
 }

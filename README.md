@@ -12,19 +12,22 @@ Weekly     15%  ███░░░░░░░░░░░░░░░░░  34
 MCP         4%  █░░░░░░░░░░░░░░░░░░░  3 / 100 calls
 ```
 
-## Setup (once)
+## Setup
 
-The command reads your API key from the `ZAI_API_KEY` environment variable (get one at https://z.ai/manage-apikey/apikey-list). For a persistent setup, add it to `~/.claude/settings.json`:
+**Zero-config if you use Z.ai with Claude Code:**
+If your `~/.claude/settings.json` already configures Z.ai as your Anthropic provider (`ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_BASE_URL`), the command **automatically detects and reads your token** from `~/.claude/settings.json` or the environment. No extra setup is required!
 
-```json
-{
-  "env": {
-    "ZAI_API_KEY": "your-key-here"
+**Otherwise:**
+Set your Z.ai API key (from https://z.ai/manage-apikey/apikey-list) either:
+- In `~/.claude/settings.json`:
+  ```json
+  {
+    "env": {
+      "ZAI_API_KEY": "your-key-here"
+    }
   }
-}
-```
-
-or export it in your shell profile: `export ZAI_API_KEY=your-key-here`.
+  ```
+- Or export in your shell profile: `export ZAI_API_KEY=your-key-here`.
 
 ## Install
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseQuota } from '../plugins/zai-usage-tracker/skills/zai-usage/scripts/zai-usage.mjs';
+import { parseQuota, resolveApiKey } from '../plugins/zai-usage-tracker/skills/zai-usage/scripts/zai-usage.mjs';
 
 const resp = (limits, data = {}) => ({ success: true, data: { limits, ...data } });
 
@@ -44,4 +44,56 @@ test('plan tier from planName wins', () => {
 test('throws on invalid structure', () => {
   assert.throws(() => parseQuota({ success: false }));
   assert.throws(() => parseQuota(null));
+});
+
+test('resolveApiKey prioritizes explicit ZAI_API_KEY in env', () => {
+  const auth = resolveApiKey({
+    env: { ZAI_API_KEY: 'env-zai-key' },
+    readFile: () => JSON.stringify({ env: { ANTHROPIC_AUTH_TOKEN: 'token-in-settings' } })
+  });
+  assert.equal(auth.key, 'env-zai-key');
+});
+
+test('resolveApiKey extracts ANTHROPIC_AUTH_TOKEN from ~/.claude/settings.json', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: (p) => {
+      if (p === '/mock/home/.claude/settings.json') {
+        return JSON.stringify({
+          env: {
+            ANTHROPIC_AUTH_TOKEN: 'mock-zai-token',
+            ANTHROPIC_BASE_URL: 'https://api.z.ai/api/anthropic'
+          }
+        });
+      }
+      return null;
+    }
+  });
+  assert.equal(auth.key, 'mock-zai-token');
+});
+
+test('resolveApiKey extracts ZAI_API_KEY from ~/.claude/settings.json', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: (p) => {
+      if (p === '/mock/home/.claude/settings.json') {
+        return JSON.stringify({
+          env: { ZAI_API_KEY: 'mock-zai-settings-key' }
+        });
+      }
+      return null;
+    }
+  });
+  assert.equal(auth.key, 'mock-zai-settings-key');
+});
+
+test('resolveApiKey returns null when no key is present', () => {
+  const auth = resolveApiKey({
+    env: {},
+    homedir: () => '/mock/home',
+    readFile: () => null
+  });
+  assert.equal(auth, null);
 });
