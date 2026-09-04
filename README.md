@@ -49,7 +49,20 @@ Or if you only want to track quota without routing Claude Code traffic through Z
 
 ## Install
 
-### Option A — bare `/zai-usage` (personal skill)
+### Option A — via `skills` CLI (recommended, one-liner)
+
+```bash
+npx skills add mashuk-tamim/zai-usage-claude --skill zai-usage -g
+```
+
+Or target Claude Code explicitly:
+```bash
+npx skills add mashuk-tamim/zai-usage-claude --skill zai-usage -g -a claude-code
+```
+
+Then run `/zai-usage` in any Claude Code session.
+
+### Option B — manual copy
 
 ```bash
 git clone https://github.com/mashuk-tamim/zai-usage-claude
@@ -59,7 +72,7 @@ cp -r zai-usage-claude/plugins/zai-usage-tracker/skills/zai-usage ~/.claude/skil
 
 Then run `/zai-usage` in any Claude Code session. Updating = re-running the `cp`.
 
-### Option B — plugin (auto-updatable via marketplace)
+### Option C — plugin (auto-updatable via marketplace)
 
 In Claude Code, run these commands **one by one** (do not paste both at the same time):
 
@@ -73,7 +86,7 @@ In Claude Code, run these commands **one by one** (do not paste both at the same
 /plugin install zai-usage-tracker@zai-usage-claude
 ```
 
-Then run `/zai-usage-tracker:zai-usage`. (Plugin commands are always namespaced — that's a Claude Code platform rule. Use Option A if you want the bare name.) Update later with `/plugin marketplace update zai-usage-claude`.
+Then run `/zai-usage-tracker:zai-usage`. (Plugin commands are always namespaced — that's a Claude Code platform rule. Use Option A or B if you want the bare name.) Update later with `/plugin marketplace update zai-usage-claude`.
 
 ## Usage
 
