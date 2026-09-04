@@ -12,9 +12,11 @@ Weekly     15%  ███░░░░░░░░░░░░░░░░░  34
 MCP         4%  █░░░░░░░░░░░░░░░░░░░  3 / 100 calls
 
 Options:
-  /zai-usage --tz <zone>   Set timezone (e.g. /zai-usage --tz Asia/Dhaka)
-  /zai-usage --24h         24-hour time format
-  /zai-usage --json        Output raw parsed JSON
+  /zai-usage --tz <zone>           Set timezone for this run
+  /zai-usage --24h                 24-hour time format
+  /zai-usage --set-tz <zone>       Save default timezone (e.g. Asia/Dhaka)
+  /zai-usage --set-format <12|24>  Save default format (12h or 24h)
+  /zai-usage --json                Output raw parsed JSON
 ```
 
 ## Setup
@@ -71,10 +73,12 @@ Then run `/zai-usage-tracker:zai-usage`. (Plugin commands are always namespaced 
 ## Usage
 
 ```
-/zai-usage                 # system-local timezone, 12h clock
-/zai-usage --tz Asia/Dhaka # override timezone
-/zai-usage --24h           # 24-hour clock
-/zai-usage --json          # raw parsed JSON
+/zai-usage                        # run with saved defaults (or system local)
+/zai-usage --set-tz Asia/Dhaka    # save default timezone to ~/.claude/zai-usage.json
+/zai-usage --set-format 24h       # save default format (12h or 24h)
+/zai-usage --tz UTC               # temporary override for this run
+/zai-usage --24h                  # temporary 24-hour clock
+/zai-usage --json                 # raw parsed JSON
 ```
 
 Or just ask Claude things like "how much Z.ai quota do I have left?" — the skill auto-triggers.

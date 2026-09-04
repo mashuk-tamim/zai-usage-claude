@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseQuota, resolveApiKey } from '../plugins/zai-usage-tracker/skills/zai-usage/scripts/zai-usage.mjs';
+import {
+  parseQuota,
+  resolveApiKey,
+  validateTimezone,
+  loadPreferences,
+  savePreferences
+} from '../plugins/zai-usage-tracker/skills/zai-usage/scripts/zai-usage.mjs';
 
 const resp = (limits, data = {}) => ({ success: true, data: { limits, ...data } });
 
@@ -96,4 +102,36 @@ test('resolveApiKey returns null when no key is present', () => {
     readFile: () => null
   });
   assert.equal(auth, null);
+});
+
+test('validateTimezone validates IANA timezone names correctly', () => {
+  assert.equal(validateTimezone('Asia/Dhaka'), true);
+  assert.equal(validateTimezone('UTC'), true);
+  assert.equal(validateTimezone('America/New_York'), true);
+  assert.equal(validateTimezone('Invalid/Zone_Name'), false);
+});
+
+test('loadPreferences returns defaults when file does not exist', () => {
+  const prefs = loadPreferences({
+    homedir: () => '/mock/home',
+    readFile: () => null
+  });
+  assert.equal(prefs.isConfigured, false);
+  assert.equal(prefs.timezone, null);
+  assert.equal(prefs.timeFormat, null);
+});
+
+test('savePreferences and loadPreferences save and retrieve user configuration', () => {
+  let store = null;
+  const opts = {
+    homedir: () => '/mock/home',
+    readFile: () => store,
+    writeFile: (p, content) => { store = content; }
+  };
+
+  savePreferences({ timezone: 'Asia/Dhaka', timeFormat: '24h' }, opts);
+  const loaded = loadPreferences(opts);
+  assert.equal(loaded.isConfigured, true);
+  assert.equal(loaded.timezone, 'Asia/Dhaka');
+  assert.equal(loaded.timeFormat, '24h');
 });
