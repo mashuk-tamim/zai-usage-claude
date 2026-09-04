@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "zai-usage-tracker",
+  "displayName": "Z.ai Usage Tracker",
+  "version": "1.0.0",
+  "description": "Z.ai (GLM) Coding Plan quota usage in Claude Code — run /zai-usage-tracker:zai-usage",
+  "author": { "name": "Mashuk Tamim" },
+  "repository": "https://github.com/mashuk-tamim/zai-usage-claude",
+  "license": "MIT",
+  "keywords": ["zai", "glm", "quota", "usage", "claude-code"]
+}

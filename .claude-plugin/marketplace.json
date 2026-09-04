@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "zai-usage-claude",
+  "owner": { "name": "Mashuk Tamim" },
+  "description": "Z.ai (GLM) Coding Plan quota tracking for Claude Code",
+  "plugins": [
+    {
+      "name": "zai-usage-tracker",
+      "source": "./plugins/zai-usage-tracker",
+      "description": "Z.ai (GLM) Coding Plan quota usage as a Claude Code slash command",
+      "version": "1.0.0",
+      "author": { "name": "Mashuk Tamim" },
+      "keywords": ["zai", "glm", "quota", "usage"]
+    }
+  ]
+}
