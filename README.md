@@ -10,6 +10,8 @@ GLM Coding Plan — Z.ai Usage  (times in Asia/Dhaka)
 Weekly     15%  ███░░░░░░░░░░░░░░░░░  340.50K / 2.2M tokens
            Resets Monday, September 8, 2026 at 6:00 PM
 MCP         4%  █░░░░░░░░░░░░░░░░░░░  3 / 100 calls
+
+To configure settings: code ~/.claude/settings.json [active: env.ANTHROPIC_AUTH_TOKEN]
 ```
 
 ## Setup
@@ -17,17 +19,28 @@ MCP         4%  █░░░░░░░░░░░░░░░░░░░  3 
 **Zero-config if you use Z.ai with Claude Code:**
 If your `~/.claude/settings.json` already configures Z.ai as your Anthropic provider (`ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_BASE_URL`), the command **automatically detects and reads your token** from `~/.claude/settings.json` or the environment. No extra setup is required!
 
-**Otherwise:**
-Set your Z.ai API key (from https://z.ai/manage-apikey/apikey-list) either:
-- In `~/.claude/settings.json`:
-  ```json
-  {
-    "env": {
-      "ZAI_API_KEY": "your-key-here"
-    }
+### Recommended `~/.claude/settings.json` for Z.ai
+
+Run `code ~/.claude/settings.json` in your terminal and add:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "your-zai-api-key",
+    "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "1",
+    "DISABLE_TELEMETRY": "1",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-5.3-flash[1m]",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.3-flash[1m]",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.3[1m]",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "700000"
   }
-  ```
-- Or export in your shell profile: `export ZAI_API_KEY=your-key-here`.
+}
+```
+
+Or if you only want to track quota without routing Claude Code traffic through Z.ai, simply set `"ZAI_API_KEY": "your-key"` in `~/.claude/settings.json`, or export `ZAI_API_KEY=your-key` in your shell profile.
 
 ## Install
 
@@ -58,6 +71,7 @@ Then run `/zai-usage-tracker:zai-usage`. (Plugin commands are always namespaced 
 /zai-usage                 # system-local timezone, 12h clock
 /zai-usage --24h           # 24-hour clock
 /zai-usage --tz Asia/Dhaka # override timezone
+/zai-usage --config        # show settings.json configuration template
 /zai-usage --json          # raw parsed JSON
 ```
 

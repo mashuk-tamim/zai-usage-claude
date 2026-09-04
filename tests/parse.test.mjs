@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseQuota, resolveApiKey } from '../plugins/zai-usage-tracker/skills/zai-usage/scripts/zai-usage.mjs';
+import { parseQuota, resolveApiKey, CONFIG_TEMPLATE } from '../plugins/zai-usage-tracker/skills/zai-usage/scripts/zai-usage.mjs';
 
 const resp = (limits, data = {}) => ({ success: true, data: { limits, ...data } });
 
@@ -96,4 +96,10 @@ test('resolveApiKey returns null when no key is present', () => {
     readFile: () => null
   });
   assert.equal(auth, null);
+});
+
+test('CONFIG_TEMPLATE contains required Z.ai environment fields', () => {
+  assert.ok(CONFIG_TEMPLATE.env.ANTHROPIC_AUTH_TOKEN);
+  assert.equal(CONFIG_TEMPLATE.env.ANTHROPIC_BASE_URL, 'https://api.z.ai/api/anthropic');
+  assert.ok(CONFIG_TEMPLATE.env.ANTHROPIC_DEFAULT_OPUS_MODEL);
 });

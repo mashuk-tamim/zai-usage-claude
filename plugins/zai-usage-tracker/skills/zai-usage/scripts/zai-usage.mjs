@@ -148,8 +148,29 @@ export function resolveApiKey(options = {}) {
   return null;
 }
 
+export const CONFIG_TEMPLATE = {
+  env: {
+    ANTHROPIC_AUTH_TOKEN: 'your-zai-api-key',
+    ANTHROPIC_BASE_URL: 'https://api.z.ai/api/anthropic',
+    API_TIMEOUT_MS: '3000000',
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+    CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY: '1',
+    DISABLE_TELEMETRY: '1',
+    ANTHROPIC_DEFAULT_HAIKU_MODEL: 'glm-5.3-flash[1m]',
+    ANTHROPIC_DEFAULT_SONNET_MODEL: 'glm-5.3-flash[1m]',
+    ANTHROPIC_DEFAULT_OPUS_MODEL: 'glm-5.3[1m]',
+    CLAUDE_CODE_AUTO_COMPACT_WINDOW: '700000'
+  }
+};
+
+export function printConfigInstruction() {
+  console.log('To configure Z.ai in Claude Code, add the following to ~/.claude/settings.json:\n');
+  console.log('Run in terminal: code ~/.claude/settings.json\n');
+  console.log(JSON.stringify(CONFIG_TEMPLATE, null, 2));
+}
+
 function usage() {
-  console.error('Usage: node zai-usage.mjs [--tz <IANA-timezone>] [--24h] [--json]');
+  console.error('Usage: node zai-usage.mjs [--tz <IANA-timezone>] [--24h] [--json] [--config]');
 }
 
 async function main() {
@@ -166,6 +187,9 @@ async function main() {
       h24 = true;
     } else if (a === '--json') {
       json = true;
+    } else if (a === '--config' || a === '--setup') {
+      printConfigInstruction();
+      process.exit(0);
     } else if (a === '--help' || a === '-h') {
       usage();
       process.exit(0);
@@ -180,12 +204,9 @@ async function main() {
   if (!auth?.key) {
     console.error(
       'Z.ai API key is not set.\n' +
-      'Could not find ZAI_API_KEY or ANTHROPIC_AUTH_TOKEN in environment or ~/.claude/settings.json.\n' +
-      'Get a key: https://z.ai/manage-apikey/apikey-list\n' +
-      'Set it either:\n' +
-      '  in ~/.claude/settings.json: { "env": { "ANTHROPIC_AUTH_TOKEN": "..." } } (or "ZAI_API_KEY")\n' +
-      '  or in your shell profile: export ZAI_API_KEY=your-key'
+      'Could not find ANTHROPIC_AUTH_TOKEN or ZAI_API_KEY in environment or ~/.claude/settings.json.\n'
     );
+    printConfigInstruction();
     process.exit(1);
   }
 
@@ -227,6 +248,12 @@ async function main() {
       console.log(`${''.padEnd(8)}Resets ${fmtReset(l.nextResetTime, tz, h24)}`);
     }
   }
+
+  const tokenField = auth.source?.includes('ANTHROPIC_AUTH_TOKEN')
+    ? 'env.ANTHROPIC_AUTH_TOKEN'
+    : (auth.source?.includes('ZAI_API_KEY') ? 'env.ZAI_API_KEY' : '');
+  const fieldHint = tokenField ? ` [active: ${tokenField}]` : '';
+  console.log(`\nTo configure settings: code ~/.claude/settings.json${fieldHint}`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
