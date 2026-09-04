@@ -61,10 +61,15 @@ Then run `/zai-usage` in any Claude Code session. Updating = re-running the `cp`
 
 ### Option B — plugin (auto-updatable via marketplace)
 
-In Claude Code:
+In Claude Code, run these commands **one by one** (do not paste both at the same time):
 
+1. Add marketplace:
 ```
 /plugin marketplace add mashuk-tamim/zai-usage-claude
+```
+
+2. Install plugin:
+```
 /plugin install zai-usage-tracker@zai-usage-claude
 ```
 
